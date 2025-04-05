@@ -85,7 +85,7 @@ class BookController extends Controller
 
         try {
             // Search for books with the given title
-            $books = Book::where('title', 'LIKE', "%$title%")->get(['id', 'title', 'author']);
+            $books = Book::where('title', 'LIKE', "%$title%")->get();
 
             // Check if any books were found
             if ($books->isEmpty()) {
