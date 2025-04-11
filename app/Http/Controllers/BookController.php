@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
@@ -13,7 +14,12 @@ class BookController extends Controller
     public function index()
     {                
         try {            
-            $books = Book::all();
+            //$books = Book::all();
+
+            $books = DB::table('books as b')
+                ->join('categories as c', 'b.category_id', '=', 'c.id')
+                ->select('b.id', 'b.title', 'b.author', 'b.description', 'b.status', 'c.name as category_name', 'c.emoji')
+                ->get();
             
             if($books->isEmpty()) {
                 return response()->json([
@@ -26,7 +32,7 @@ class BookController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'An error occurred while fetching books',
-                'error' => $th->getMessage()
+                'error'   => $th->getMessage()
             ], 500); // 500 = Internal Server Error
         }
     }
@@ -46,9 +52,13 @@ class BookController extends Controller
                 return response()->json([
                     'message' => 'Author parameter is required'
                 ], 400); // 400 = Bad Request
-            }
+            }            
 
-            $books = Book::where('author', 'LIKE', "%$author%")->get();
+            $books = DB::table('books as b')
+                ->join('categories as c', 'b.category_id', '=', 'c.id')                
+                ->select('b.id', 'b.title', 'b.author', 'b.description', 'b.status', 'c.name as category_name', 'c.emoji')
+                ->where('author', 'LIKE', "%$author%")
+                ->get();
 
             if ($books->isEmpty()) {
                 return response()->json([
@@ -61,7 +71,7 @@ class BookController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'An error occurred while searching for books',
-                'error' => $th->getMessage()
+                'error'   => $th->getMessage()
             ], 500); // 500 = Internal Server Error
         }
     }
@@ -84,8 +94,12 @@ class BookController extends Controller
         }
 
         try {
-            // Search for books with the given title
-            $books = Book::where('title', 'LIKE', "%$title%")->get();
+            // Search for books with the given title            
+            $books = DB::table('books as b')
+                ->join('categories as c', 'b.category_id', '=', 'c.id')                
+                ->select('b.id', 'b.title', 'b.author', 'b.description', 'b.status', 'c.name as category_name', 'c.emoji')
+                ->where('author', 'LIKE', "%$title%")
+                ->get();
 
             // Check if any books were found
             if ($books->isEmpty()) {
@@ -101,7 +115,7 @@ class BookController extends Controller
             // Return an error message if an exception was thrown
             return response()->json([
                 'message' => 'An error occurred while searching for books',
-                'error' => $th->getMessage()
+                'error'   => $th->getMessage()
             ], 500); // 500 = Internal Server Error
         }
     }
@@ -127,8 +141,14 @@ class BookController extends Controller
      */
     public function show(Book $book, $id)
     {
-        try {            
-            $books = Book::find($id);
+        try {                        
+            // Fetch the book with the given ID
+            $books = DB::table('books as b')
+                ->join('categories as c', 'b.category_id', '=', 'c.id')                
+                ->select('b.id', 'b.title', 'b.author', 'b.description', 'b.status', 'c.name as category_name', 'c.emoji')
+                ->where('b.id', '=', "{$id}")
+                ->get();
+
             if (!$books) {
                 return response()->json([
                     'message' => 'Book not found'
@@ -140,7 +160,7 @@ class BookController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'An error occurred while fetching books',
-                'error' => $th->getMessage()
+                'error'   => $th->getMessage()
             ], 500); // 500 = Internal Server Error
         }
     }
